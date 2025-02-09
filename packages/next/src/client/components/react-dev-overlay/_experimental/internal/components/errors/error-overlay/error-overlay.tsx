@@ -43,8 +43,10 @@ export function ErrorOverlay({
   if (!!state.rootLayoutMissingTags?.length) {
     return (
       <RootLayoutMissingTagsError
-        missingTags={state.rootLayoutMissingTags}
         {...commonProps}
+        // This is a runtime error, forcedly display error overlay
+        rendered
+        missingTags={state.rootLayoutMissingTags}
       />
     )
   }

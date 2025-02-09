@@ -48,7 +48,6 @@ const styles = css`
   [data-nextjs-dialog-content] {
     border: none;
     margin: 0;
-    height: 100%;
     display: flex;
     flex-direction: column;
     position: relative;
