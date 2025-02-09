@@ -36,10 +36,6 @@ export { shouldRunTurboDevTest }
 export const nextServer = server
 export const pkg = _pkg
 
-// TODO(jiwon): Remove this once we have a new dev overlay at stable.
-const isNewDevOverlay =
-  process.env.__NEXT_EXPERIMENTAL_NEW_DEV_OVERLAY === 'true'
-
 export function initNextServerScript(
   scriptPath: string,
   successRegexp: RegExp,
@@ -922,13 +918,7 @@ export async function getToastErrorCount(
  */
 export async function openRedbox(browser: BrowserInterface): Promise<void> {
   try {
-    //TODO(jiwon): data-nextjs-toast won't open red box in new UI.
-    if (isNewDevOverlay) {
-      await browser.waitForElementByCss('[data-error-expanded="true"]')
-      await browser.waitForElementByCss('[data-issues-open]').click()
-    } else {
-      await browser.waitForElementByCss('[data-nextjs-toast]').click()
-    }
+    await browser.waitForElementByCss('[data-nextjs-toast]').click()
   } catch (cause) {
     const error = new Error('No Redbox to open.', { cause })
     Error.captureStackTrace(error, openRedbox)
@@ -990,28 +980,24 @@ export function getRedboxHeader(browser: BrowserInterface) {
   })
 }
 
-export function getRedboxFloatingHeaderText(
+function getRedboxFloatingHeaderText(
   browser: BrowserInterface
 ): Promise<string> {
   return browser.eval(() => {
     const portal = [].slice
       .call(document.querySelectorAll('nextjs-portal'))
-      .find((p) => p.shadowRoot.querySelector('.error-overlay-floating-header'))
+      .find((p) =>
+        p.shadowRoot.querySelector('[data-nextjs-dialog-header-total-count]')
+      )
     const root = portal.shadowRoot
-    return root.querySelector('.error-overlay-floating-header')?.innerText
+    return root?.innerText
   })
 }
 
-export async function getRedboxTotalErrorCount(browser: BrowserInterface) {
-  // TODO(jiwon): Remove this once we have a new dev overlay at stable.
-  if (isNewDevOverlay) {
-    // N/M\nNext.js X.Y.Z -> M
-    const text = (await getRedboxFloatingHeaderText(browser)) || ''
-    return parseInt(text.match(/\/(\d+)/)?.[1])
-  }
-
-  const header = (await getRedboxHeader(browser)) || ''
-  return parseInt(header.match(/\d+ of (\d+) issue/)?.[1], 10)
+export async function getRedboxTotalErrorCount(
+  browser: BrowserInterface
+): Promise<number> {
+  return parseInt((await getRedboxFloatingHeaderText(browser)) || '-1')
 }
 
 export function getRedboxSource(browser: BrowserInterface) {
